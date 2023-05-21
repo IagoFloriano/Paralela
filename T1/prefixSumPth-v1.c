@@ -97,19 +97,22 @@ void verifyPrefixSum( const TYPE *InputVec,
 
 
 void *somaPrefixoParcial(void * idPtr){
-    int id = *((int *)idPtr);
+  int id = *((int *)idPtr);
 
-    //               Teto( nTotalElements / nThreads )
-    int nElementos = (nTotalElements + nThreads - 1) / nThreads;
+  //               Teto( nTotalElements / nThreads )
+  int nElementos = (nTotalElements + nThreads - 1) / nThreads;
 
-    // Thread fará os calculo no intervalo [primeiro, ultimo)
-    int primeiro = id * nElementos;
-    int ultimo = min((id+1) * nElementos, nTotalElements);
+  // Thread fará os calculo no intervalo [primeiro, ultimo)
+  int primeiro = id * nElementos;
+  int ultimo = min((id+1) * nElementos, nTotalElements);
 
+
+  while (true) {
+    pthread_barrier_wait(&myBarrier);
     register TYPE somaLocal = 0;
 
     for (int i = primeiro; i < ultimo; i++){
-        somaLocal += InputVector[i];
+      somaLocal += InputVector[i];
     }
 
     partialSum[id] = somaLocal;
@@ -118,38 +121,23 @@ void *somaPrefixoParcial(void * idPtr){
 
     somaLocal = 0;
     for (int i = 0; i < id; i++){
-        somaLocal += partialSum[i];
+      somaLocal += partialSum[i];
     }
 
     OutputVector[primeiro] = InputVector[primeiro] + somaLocal;
 
     for (int i = primeiro+1; i < ultimo; i++){
-        OutputVector[i] = OutputVector[i-1] + InputVector[i];
+      OutputVector[i] = OutputVector[i-1] + InputVector[i];
     }
 
     pthread_barrier_wait(&myBarrier);
-
-    return NULL;
-}
-
-TYPE somaParalelaPrefixo(const TYPE InputVector[], pthread_t *Thread, int *my_thread_id){
-  static int barreiraInicializada = 0;
-  if (!barreiraInicializada){
-    //Inicializar barreira
-    pthread_barrier_init(&myBarrier, NULL, nThreads);
-
-    my_thread_id[0] = 0;
-    //Inicia todas as threads menos a id=0
-    for (int i = 1; i < nThreads; i++){
-      my_thread_id[i] = i;
-      pthread_create(&Thread[i], NULL, somaPrefixoParcial, &my_thread_id[i]);
+    if (!id) {
+      return NULL;
     }
-    barreiraInicializada = 1;
   }
 
-  somaPrefixoParcial(&my_thread_id[0]);
-
-  return 1;
+  if (id != 0)
+    pthread_exit(NULL);
 }
 
 void ParallelPrefixSumPth( const TYPE *InputVec, 
@@ -157,10 +145,24 @@ void ParallelPrefixSumPth( const TYPE *InputVec,
                            long nTotalElmts,
                            int nThreads )
 {
-   pthread_t Thread[MAX_THREADS];
-   int my_thread_id[MAX_THREADS];
+  static pthread_t Thread[MAX_THREADS];
+  int my_thread_id[MAX_THREADS];
    
-   somaParalelaPrefixo(InputVec, Thread, my_thread_id);
+  static int barreiraInicializada = 0;
+  if (!barreiraInicializada){
+    //Inicializar barreira
+    pthread_barrier_init(&myBarrier, NULL, nThreads);
+    barreiraInicializada = 1;
+
+    my_thread_id[0] = 0;
+    //Inicia todas as threads menos a chamadora
+    for (int i = 1; i < nThreads; i++){
+      my_thread_id[i] = i;
+      pthread_create(&Thread[i], NULL, somaPrefixoParcial, &my_thread_id[i]);
+    }
+  }
+
+  somaPrefixoParcial(&my_thread_id[0]);
 
 }
 
@@ -264,7 +266,7 @@ int main(int argc, char *argv[])
 
             ////////////////////////////
             // call it N times
-            #define NTIMES 1
+            #define NTIMES 1000
             TYPE globalSum;
             TYPE *InVec = InputVector;
             for( int i=0; i<NTIMES ; i++ ) {
