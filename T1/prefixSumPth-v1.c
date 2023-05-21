@@ -132,6 +132,26 @@ void *somaPrefixoParcial(void * idPtr){
     return NULL;
 }
 
+TYPE somaParalelaPrefixo(const TYPE InputVector[], pthread_t *Thread, int *my_thread_id){
+  static int barreiraInicializada = 0;
+  if (!barreiraInicializada){
+    //Inicializar barreira
+    pthread_barrier_init(&myBarrier, NULL, nThreads);
+
+    my_thread_id[0] = 0;
+    //Inicia todas as threads menos a id=0
+    for (int i = 1; i < nThreads; i++){
+      my_thread_id[i] = i;
+      pthread_create(&Thread[i], NULL, somaPrefixoParcial, &my_thread_id[i]);
+    }
+    barreiraInicializada = 1;
+  }
+
+  somaPrefixoParcial(&my_thread_id[0]);
+
+  return 1;
+}
+
 void ParallelPrefixSumPth( const TYPE *InputVec, 
                            const TYPE *OutputVec, 
                            long nTotalElmts,
@@ -140,24 +160,8 @@ void ParallelPrefixSumPth( const TYPE *InputVec,
    pthread_t Thread[MAX_THREADS];
    int my_thread_id[MAX_THREADS];
    
+   somaParalelaPrefixo(InputVec, Thread, my_thread_id);
 
-   ///////////////// INCLUIR AQUI SEU CODIGO da V1 /////////
-
-   static int barreiraInicializada = 0;
-   if (!barreiraInicializada){
-       //Inicializar barreira
-       pthread_barrier_init(&myBarrier, NULL, nThreads);
-
-       my_thread_id[0] = 0;
-       //Inicia todas as threads menos a id=0
-       for (int i = 1; i < nThreads; i++){
-           my_thread_id[i] = i;
-           pthread_create(&Thread[i], NULL, somaPrefixoParcial, &my_thread_id[i]);
-       }
-       barreiraInicializada = 1;
-   }
-
-   pthread_create(&Thread[0], NULL, somaPrefixoParcial, &my_thread_id[0]);
 }
 
 int main(int argc, char *argv[])
@@ -260,7 +264,7 @@ int main(int argc, char *argv[])
 
             ////////////////////////////
             // call it N times
-            #define NTIMES 1000
+            #define NTIMES 1
             TYPE globalSum;
             TYPE *InVec = InputVector;
             for( int i=0; i<NTIMES ; i++ ) {
