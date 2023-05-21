@@ -57,6 +57,8 @@ TYPE *OutputVector;	// will use malloc e free to allow large (>2GB) vectors
 chronometer_t parallelPrefixSumTime;
 
 volatile TYPE partialSum[MAX_THREADS];
+volatile TYPE partialSumVector[MAX_THREADS];
+pthread_barrier_t myBarrier;
    
 int min(int a, int b)
 {
@@ -94,6 +96,41 @@ void verifyPrefixSum( const TYPE *InputVec,
 }
 
 
+void *somaPrefixoParcial(void * idPtr){
+    int id = *((int *)idPtr);
+
+    //               Teto( nTotalElements / nThreads )
+    int nElementos = (nTotalElements + nThreads - 1) / nThreads;
+
+    // Thread fará os calculo no intervalo [primeiro, ultimo)
+    int primeiro = id * nElementos;
+    int ultimo = min((id+1) * nElementos, nTotalElements);
+
+    register TYPE somaLocal = 0;
+
+    for (int i = primeiro; i < ultimo; i++){
+        somaLocal += InputVector[i];
+    }
+
+    partialSum[id] = somaLocal;
+
+    pthread_barrier_wait(&myBarrier);
+
+    somaLocal = 0;
+    for (int i = 0; i < id; i++){
+        somaLocal += partialSum[i];
+    }
+
+    OutputVector[primeiro] = InputVector[primeiro] + somaLocal;
+
+    for (int i = primeiro+1; i < ultimo; i++){
+        OutputVector[i] = OutputVector[i-1] + InputVector[i];
+    }
+
+    pthread_barrier_wait(&myBarrier);
+
+    return NULL;
+}
 
 void ParallelPrefixSumPth( const TYPE *InputVec, 
                            const TYPE *OutputVec, 
@@ -105,13 +142,22 @@ void ParallelPrefixSumPth( const TYPE *InputVec,
    
 
    ///////////////// INCLUIR AQUI SEU CODIGO da V1 /////////
-   
-   // criar o POOL de threads aqui!
-   
-   // voce pode criar outras funcoes para as suas threads
-   
-   //////////////////////////////////////////////////////////
-   
+
+   static int barreiraInicializada = 0;
+   if (!barreiraInicializada){
+       //Inicializar barreira
+       pthread_barrier_init(&myBarrier, NULL, nThreads);
+
+       my_thread_id[0] = 0;
+       //Inicia todas as threads menos a id=0
+       for (int i = 1; i < nThreads; i++){
+           my_thread_id[i] = i;
+           pthread_create(&Thread[i], NULL, somaPrefixoParcial, &my_thread_id[i]);
+       }
+       barreiraInicializada = 1;
+   }
+
+   pthread_create(&Thread[0], NULL, somaPrefixoParcial, &my_thread_id[0]);
 }
 
 int main(int argc, char *argv[])
@@ -215,8 +261,8 @@ int main(int argc, char *argv[])
             ////////////////////////////
             // call it N times
             #define NTIMES 1000
-            element_TYPE globalSum;
-            element_TYPE *InVec = InputVector;
+            TYPE globalSum;
+            TYPE *InVec = InputVector;
             for( int i=0; i<NTIMES ; i++ ) {
                 //globalSum = parallel_reduceSum( InputVector,
                 //                                nTotalElements, nThreads );
