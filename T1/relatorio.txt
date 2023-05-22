@@ -1,0 +1,60 @@
+Relatório trabalho 1
+por: Iago Mello Floriano
+GRR: 20196049
+
+Como funciona o algorítmo:
+A execução do algoritmo usa o paralelismo para se fazer a soma de prefixos de forma paralela
+O vetor de entrada foi divida em numeros iguais continuos de elementos para cada thread (a ultima thread talvez fique com um elemento a menos)
+Assim, cada thread faz a soma total dos seus elementos do vetor e salva esse valor em um vetor auxiliar
+Quando todas as threads escreverem nesse vetor (foi usado uma barreira pra sincronizar essa parte) se da início ao calculo do valores que seram os realmente salvos.
+Os valores salvos serão salvos em um vetor de Output com mesma dimenção do vetor de Input.
+Cada thread usará o vetor auxiliar para calcular um valor para somar em todos seus elementos.
+A thread 0 usará esse valor como 0.
+Cada thread então fará a soma de prefixos de apenas seus elementos, porém somando com o valor que foi possível obter do vetor auxiliar.
+
+Como foram feitos os experimentos:
+Usando o script roda-v2.sh providenciado pelo professor rodei o programa para 5000000 elementos 10 vezes para cada número de threads de 1 a 8.
+
+
+SAÍDA DO COMANDO LSCPU (máquina h38 dos laboratórios do dinf):
+
+Arquitetura:                     x86_64
+Modo(s) operacional da CPU:      32-bit, 64-bit
+Ordem dos bytes:                 Little Endian
+Tamanhos de endereço:            39 bits physical, 48 bits virtual
+CPU(s):                          4
+Lista de CPU(s) on-line:         0-3
+Thread(s) per núcleo:            1
+Núcleo(s) por soquete:           4
+Soquete(s):                      1
+Nó(s) de NUMA:                   1
+ID de fornecedor:                GenuineIntel
+Família da CPU:                  6
+Modelo:                          158
+Nome do modelo:                  Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz
+Step:                            9
+CPU MHz:                         2760.952
+CPU MHz máx.:                    3800,0000
+CPU MHz mín.:                    800,0000
+BogoMIPS:                        6799.81
+Virtualização:                   VT-x
+cache de L1d:                    128 KiB
+cache de L1i:                    128 KiB
+cache de L2:                     1 MiB
+cache de L3:                     6 MiB
+CPU(s) de nó0 NUMA:              0-3
+Vulnerability Itlb multihit:     KVM: Mitigation: VMX disabled
+Vulnerability L1tf:              Mitigation; PTE Inversion; VMX conditional cache flushes, SMT disabled
+Vulnerability Mds:               Vulnerable: Clear CPU buffers attempted, no microcode; SMT disabled
+Vulnerability Meltdown:          Mitigation; PTI
+Vulnerability Mmio stale data:   Vulnerable: Clear CPU buffers attempted, no microcode; SMT disabled
+Vulnerability Retbleed:          Vulnerable
+Vulnerability Spec store bypass: Vulnerable
+Vulnerability Spectre v1:        Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:        Mitigation; Retpolines, STIBP disabled, RSB filling, PBRSB-eIBRS Not affected
+Vulnerability Srbds:             Vulnerable: No microcode
+Vulnerability Tsx async abort:   Vulnerable: Clear CPU buffers attempted, no microcode; SMT disabled
+Opções:                          fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon
+                                 pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe pop
+                                 cnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single pti tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1
+                                  hle avx2 smep bmi2 erms invpcid rtm mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp

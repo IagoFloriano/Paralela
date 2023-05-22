@@ -1,6 +1,6 @@
 // TRABALHO1: CI1316 1o semestre 2023
-// Aluno:
-// GRR:
+// Aluno: Iago Mello Floriano
+// GRR: 20196049
 //
 
 	///////////////////////////////////////
