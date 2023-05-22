@@ -15,6 +15,7 @@ Cada thread então fará a soma de prefixos de apenas seus elementos, porém som
 Como foram feitos os experimentos:
 Usando o script roda-v2.sh providenciado pelo professor rodei o programa para 5000000 elementos 10 vezes para cada número de threads de 1 a 8.
 
+(OBS. Não tenho certeza se a planilha está preenchida como desejado, porém todos os tempos obtidos estão em dadosV1
 
 SAÍDA DO COMANDO LSCPU (máquina h38 dos laboratórios do dinf):
 
